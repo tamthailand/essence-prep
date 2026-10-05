@@ -815,6 +815,36 @@
     margin-bottom:6px;
     padding-right:6px;
   }
+  /* PDF test-paper link block (Mack, 2026-10-05) — opens the teacher's TEST PDF
+     (แบบทดสอบท้ายบท) on Google Drive; never links the เฉลย/answer key. */
+  .quiz-pdf-link{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .quiz-pdf-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    min-height:44px;
+    font-family:var(--font-round);
+    font-weight:700;
+    font-size:17px;
+    color:var(--rose);
+    background:var(--rose-soft);
+    border:2px solid var(--rose);
+    border-radius:9999px;
+    padding:8px 16px;
+    text-decoration:none;
+  }
+  .quiz-pdf-btn:active{transform:translateY(1px);}
+  .quiz-pdf-hint{
+    width:100%;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
   .quiz-progress{
     font-family:var(--font-body);
     font-size:13px;
@@ -2680,6 +2710,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     <div class="quiz-header">
       <button type="button" class="quiz-close" data-quiz-close="1" aria-label="ปิดแบบทดสอบ">✕</button>
       <div class="quiz-title" id="quiz-title"></div>
+      <div class="quiz-pdf-link" id="quiz-pdf-link"></div>
       <div class="quiz-progress" id="quiz-progress"></div>
       <div class="quiz-progress-track"><div class="quiz-progress-fill" id="quiz-progress-fill" style="width:0%"></div></div>
     </div>
@@ -2732,6 +2763,7 @@ var QUIZZES = {
 
   trig: {
     title: 'แบบทดสอบท้ายบท — อัตราส่วนตรีโกณมิติ',
+    pdf: ['https://drive.google.com/file/d/1KQufRpXOituHtlHV0wNXU2qr8qaXr9Fz/view'],
     questions: [
       { num:'1.1', text:'จากรูปที่กำหนดให้จงหาค่าต่อไปนี้ (1 คะแนน) — 1.1) cos A', fig:'trigonometric-ratios-q1',
         answer:'40/41', working:'AB² = 82² − 18² = (82+18)(82−18) = 100×64 → AB = 80\ncos A = AB/AC = 80/82 = 40/41' },
@@ -2771,6 +2803,7 @@ var QUIZZES = {
 
   integers: {
     title: 'แบบทดสอบท้ายบท — จำนวนเต็ม',
+    pdf: ['https://drive.google.com/file/d/1Bd9fMnuM3EFuLJmbRQ2EKNF_7qIFUAOX/view'],
     questions: [
       { num:'1.1', text:'จงหาผลลัพธ์ของจำนวนต่อไปนี้ — 1) −(21 − 9) =', answer:'−12' },
       { num:'1.2', text:'2) (−7) + 15 =', answer:'8' },
@@ -2786,6 +2819,7 @@ var QUIZZES = {
 
   decfrac: {
     title: 'แบบทดสอบท้ายบท — เศษส่วน ทศนิยม และร้อยละ',
+    pdf: ['https://drive.google.com/file/d/10yBs_SOr-LGX2erxZ95AD_MX62GOz0vu/view'],
     questions: [
       { num:'1.1', text:'จงหาผลลัพธ์ของจำนวนต่อไปนี้ — 1) −3/9 + (−15/25) =', answer:'−14/15', working:'−3/9 = −5/15, −15/25 = −9/15\n−5/15 + (−9/15) = −14/15' },
       { num:'1.2', text:'2) (−1 2/7) − (−1 4/5) =', answer:'18/35', working:'−9/7 + 9/5 = (−45+63)/35 = 18/35' },
@@ -2808,6 +2842,7 @@ var QUIZZES = {
 
   exp: {
     title: 'แบบทดสอบท้ายบท — เลขยกกำลัง',
+    pdf: ['https://drive.google.com/file/d/1oKwNZglKmquRbGhxTZcLUWaomQ7Lhzuz/view'],
     questions: [
       { num:'1.1', text:'จงหาผลลัพธ์ของจำนวนต่อไปนี้ — 1) 2³ × 2⁵ × 2⁻² =', answer:'2⁶', working:'2^(3+5+(−2)) = 2⁶' },
       { num:'1.2', text:'2) (3⁴ × 3⁷) / 3⁹ =', answer:'3²', working:'3^(4+7)/3⁹ = 3^(11−9) = 3²' },
@@ -2820,6 +2855,7 @@ var QUIZZES = {
 
   lineq: {
     title: 'แบบทดสอบท้ายบท — สมการเชิงเส้นตัวแปรเดียว',
+    pdf: ['https://drive.google.com/file/d/1SLcdEu9ZA4dxQKSLmbjQbV6domyxx78I/view'],
     questions: [
       { num:'1.1', text:'จงหาค่าของนิพจน์พีชคณิตต่อไปนี้ — 1) 5(−r − 30) เมื่อ r = 2', answer:'−160', working:'5(−2−30) = 5(−32) = −160' },
       { num:'1.2', text:'2) (2a − 1)(5a + 2) เมื่อ a = 3', answer:'85', working:'(2×3−1)(5×3+2) = (5)(17) = 85' },
@@ -2831,6 +2867,7 @@ var QUIZZES = {
 
   ratio: {
     title: 'แบบทดสอบท้ายบท — อัตราส่วน สัดส่วน และร้อยละ',
+    pdf: ['https://drive.google.com/file/d/1GDSwTk3exchkpbXpLE18JdG6Kg-mXSEG/view'],
     questions: [
       { num:'1.1', text:'จงเขียนอัตราส่วนแสดงความสัมพันธ์ของข้อความต่อไปนี้ — 1.1) พี่หลิววิ่งด้วยอัตราเร็วคงที่ 2,000 กิโลเมตร ใช้เวลา 4 ชั่วโมง', answer:'500 กิโลเมตร : 1 ชั่วโมง', working:'2,000 กม. : 4 ชม. ลดรูปด้วย ÷4 → 500 กม. : 1 ชม.' },
       { num:'1.2', text:'1.2) นักเรียน 3 คน ต่อ ขนม 20 ถุง', answer:'3 คน : 20 ถุง' },
@@ -2845,6 +2882,7 @@ var QUIZZES = {
 
   pyth: {
     title: 'แบบทดสอบท้ายบท — ทฤษฎีบทพีทาโกรัส',
+    pdf: ['https://drive.google.com/file/d/1lnC5Sp7bk6KHLCdZR7DFZA2G8Ji0sVm9/view'],
     questions: [
       { num:'1.1', text:'จงหาความยาวของด้านที่เหลือของรูปสามเหลี่ยมมุมฉากที่กำหนดให้ — 1.1)', fig:'pythagorean-theorem-q1-1', answer:'DE = 14', working:'50² = 48² + DE² → DE² = 196 → DE = 14' },
       { num:'1.2', text:'1.2)', fig:'pythagorean-theorem-q1-2', answer:'z = 26', working:'z² = 10² + 24² = 676 → z = 26' },
@@ -2863,6 +2901,7 @@ var QUIZZES = {
 
   sqrt: {
     title: 'แบบทดสอบท้ายบท — รากที่สองและรากที่สาม',
+    pdf: ['https://drive.google.com/file/d/17OPRhus1gD5QioWW4AZXNLwYwRvkG3ef/view'],
     questions: [
       { num:'1.1', text:'จงระบุว่าจำนวนที่กำหนดให้ต่อไปนี้ เป็นจำนวนตรรกยะ (Rational) หรือจำนวนอตรรกยะ (Irrational) — 1) 0.31212121212…', answer:'จำนวนตรรกยะ' },
       { num:'1.2', text:'2) π', answer:'จำนวนอตรรกยะ' },
@@ -2889,6 +2928,7 @@ var QUIZZES = {
 
   factor2: {
     title: 'แบบทดสอบท้ายบท — การแยกตัวประกอบพหุนามดีกรีสอง',
+    pdf: ['https://drive.google.com/file/d/1-CotsBp7W7dfNil994-1CAZfcQAgOAdv/view'],
     questions: [
       { num:'1.1', text:'จงแยกตัวประกอบพหุนามต่อไปนี้ — 1) x² + 3x =', answer:'x(x+3)' },
       { num:'1.2', text:'2) 8m² + 2m − 12 =', answer:'2(4m²+m−6)' },
@@ -2914,6 +2954,7 @@ var QUIZZES = {
 
   factorhigh: {
     title: 'แบบทดสอบท้ายบท — การแยกตัวประกอบพหุนามดีกรีสูงกว่าสอง',
+    pdf: ['https://drive.google.com/file/d/1-N_vNCm-mYxJ_LUVeGEUM42-qj-HV0JG/view'],
     questions: [
       { num:'1.1', text:'จงหาผลลัพธ์ต่อไปนี้ (2 คะแนน) — 1.1) √100 + √32 − √128', answer:'10 − 4√2', working:'√100=10, √32=4√2, √128=8√2\n10+4√2−8√2 = 10−4√2' },
       { num:'1.2', text:'1.2) 2√3 − 5/√3', answer:'√3/3', working:'2√3 − (5/√3)×(√3/√3) = 2√3 − 5√3/3 = (6√3−5√3)/3 = √3/3',
@@ -2938,6 +2979,7 @@ var QUIZZES = {
 
   similarity: {
     title: 'แบบทดสอบท้ายบท — ความคล้าย',
+    pdf: ['https://drive.google.com/file/d/1n5bk_Tii48drZDYWDIDr0ZU8md9VuiAP/view'],
     questions: [
       { num:'1.1', text:'จงพิจารณาว่าข้อความที่กำหนดให้ต่อไปนี้เป็น จริง หรือ เท็จ (2 คะแนน) — 1) ถ้ารูปสี่เหลี่ยม ABCD คล้ายกับรูปสี่เหลี่ยม MNOP แล้ว MN/AB = PM/DA', answer:'จริง' },
       { num:'1.2', text:'2) รูปสี่เหลี่ยมสองรูปที่มีความยาวของเส้นรอบรูปเท่ากันเป็นรูปที่คล้ายกัน', answer:'เท็จ', working:'ตัวอย่างค้าน: สี่เหลี่ยมผืนผ้า 8×4 กับสี่เหลี่ยมจัตุรัสด้าน 6 — รอบรูปเท่ากัน (24) แต่รูปร่างไม่คล้ายกัน' },
@@ -2958,6 +3000,7 @@ var QUIZZES = {
 
   circle: {
     title: 'แบบทดสอบท้ายบท — วงกลม',
+    pdf: ['https://drive.google.com/file/d/1GsDU3jBDlzOXYsrnIE-axPze4n4u9OVE/view'],
     questions: [
       { num:'1.1', text:'กำหนดให้ ส่วนของเส้นตรง MR และส่วนของเส้นตรง PN เป็นเส้นผ่านศูนย์กลางของวงกลม O และ PQ̂R = 110° จงตอบคำถามต่อไปนี้ (พร้อมให้เหตุผลประกอบ) — 1.1) จงหาขนาดของมุม NOR (1 คะแนน)', fig:'circles-q1', answer:'40°', working:'MÔN = 2×110° = 220° → มุมที่ไม่สะท้อน MÔN = 140°\nMR เป็นเส้นผ่านศูนย์กลาง → MÔR=180° → NÔR = 180−140 = 40°' },
       { num:'1.2', text:'1.2) จงหาค่า x (1 คะแนน)', fig:'circles-q1', answer:'20°', working:'มุมในส่วนโค้งเป็นครึ่งหนึ่งของมุมที่จุดศูนย์กลาง: x = 40°/2 = 20°' },
@@ -2977,6 +3020,7 @@ var QUIZZES = {
 
   poly: {
     title: 'แบบทดสอบท้ายบท — พหุนามตัวแปรเดียว',
+    pdf: ['https://drive.google.com/file/d/1NHCk4xHFkC-gwW3Z8a2lZZMDby7KWivP/view'],
     questions: [
       { num:'1.1', text:'จงหาผลบวกหรือผลคูณของจำนวนต่อไปนี้ (โดยใช้สมบัติของการบวกและการคูณ) — 1) 3,001 × 11', answer:'33,011', team:true, working:'3,001×(10+1) = 30,010+3,001 = 33,011' },
       { num:'1.2', text:'2) (37 × (−3)) + (23 × (−3))', answer:'−180', team:true, working:'−3×(37+23) = −3×60 = −180' },
@@ -3007,6 +3051,10 @@ var QUIZZES = {
 
   solid3d: {
     title: 'แบบทดสอบท้ายบท — พื้นที่ผิวและปริมาตรของรูปเรขาคณิต 3 มิติ',
+    pdf: [
+      'https://drive.google.com/file/d/1jEfcU-xJjE_Q9O33mTYMikMR3eUTTCvZ/view',
+      'https://drive.google.com/file/d/1KuV0xV7XuE_fMOQd2cynAYbD1wk6I1nm/view'
+    ],
     questions: [
       { num:'1', src:'prisms-Q3', section:'ส่วนที่ 1: ปริซึม ทรงกระบอก และพีระมิด',
         text:'จงวาดรูปคลี่จากรูปสามมิติที่กำหนดให้', fig:'surface-area-volume-3d-prisms-q3', team:true,
@@ -3161,10 +3209,31 @@ var QUIZZES = {
     state.revealed = false;
     state.results = [];
     qel('quiz-title').textContent = quiz.title;
+    renderQuizPdfLink(quiz);
     qel('quiz-modal').classList.add('open');
     qel('quiz-modal').setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
     renderCurrentQuestion();
+  }
+
+  /* Renders the teacher's TEST PDF link(s) (แบบทดสอบท้ายบท) in the quiz header.
+     quiz.pdf is an array of Google Drive /file/d/<id>/view URLs — the test
+     only, never the เฉลย/answer key. Mack, 2026-10-05. */
+  function renderQuizPdfLink(quiz){
+    var el = qel('quiz-pdf-link');
+    if (!el) return;
+    var pdfs = quiz.pdf || [];
+    if (!pdfs.length) { el.innerHTML = ''; return; }
+    var html = '';
+    pdfs.forEach(function(url, i){
+      var label = pdfs.length > 1
+        ? ('📄 เปิดแบบทดสอบ (PDF) ชุดที่ ' + (i + 1))
+        : '📄 เปิดแบบทดสอบ (PDF)';
+      html += '<a class="quiz-pdf-btn" href="' + escapeHtml(url) + '" target="_blank" rel="noopener">'
+        + escapeHtml(label) + '</a>';
+    });
+    html += '<div class="quiz-pdf-hint">ต้องใช้บัญชี Google ของโรงเรียนในการเปิดไฟล์</div>';
+    el.innerHTML = html;
   }
 
   function closeQuiz(){
