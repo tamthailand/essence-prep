@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta name="robots" content="noindex">
 <meta charset="UTF-8">
+<meta name="robots" content="noindex">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>ตารางเตรียมตัวเข้า The Essence — พี่ & น้อง</title>
 <!--
@@ -102,6 +102,34 @@
     padding:8px 14px;
   }
 
+  /* ── Save toast (tick/untick confirmation, Mack 2026-10-04) ──────
+     Fixed + pointer-events:none so it never shifts layout or blocks a
+     tap on the checkbox underneath it; pure opacity/transform fade,
+     no layout-affecting transition. */
+  #save-toast{
+    position:fixed;
+    left:50%;
+    bottom:18px;
+    bottom:calc(18px + env(safe-area-inset-bottom));
+    z-index:30;
+    transform:translate(-50%, 8px);
+    background:var(--ink);
+    color:#fff;
+    font-family:var(--font-round);
+    font-weight:700;
+    font-size:13px;
+    padding:8px 16px;
+    border-radius:9999px;
+    box-shadow:0 6px 18px rgba(36,26,31,.25);
+    max-width:calc(100% - 28px);
+    text-align:center;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s, transform .2s;
+  }
+  #save-toast.visible{opacity:1;transform:translate(-50%, 0);}
+  #save-toast.warn{background:var(--red-bad);}
+
   /* ── Header / hero ──────────────────────────────────────── */
   .hero{
     background:var(--bg-band);
@@ -185,6 +213,44 @@
     min-height:48px;
     cursor:pointer;
   }
+
+  /* ── Progress backup / restore (Mack 2026-10-04) ──────────────────
+     Same collapsed-toggle pattern as .rename-row/.rename-panel just
+     above, reusing the same tokens — kept small and out of the way per
+     brief ("not dominating"). */
+  .backup-row{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:8px;}
+  .backup-panel{
+    background:var(--card-bg);
+    border:1px solid var(--border-soft);
+    border-radius:16px;
+    padding:12px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    width:100%;
+    max-width:320px;
+    text-align:left;
+  }
+  .backup-panel.hidden{display:none;}
+  .backup-section{display:flex;flex-direction:column;gap:8px;}
+  .backup-section-title{font-family:var(--font-round);font-weight:700;font-size:13px;color:var(--ink-soft);}
+  .backup-panel label{font-size:13px;color:var(--ink-soft);display:flex;flex-direction:column;gap:4px;text-align:left;}
+  .backup-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .backup-actions .ghost-btn{flex:1 1 auto;text-align:center;font-size:12.5px;padding:8px 10px;min-height:44px;}
+  .backup-code-label.hidden{display:none;}
+  .backup-panel textarea{
+    font-size:13px;
+    font-family:var(--font-body);
+    padding:8px 10px;
+    border-radius:12px;
+    border:1px solid var(--border-soft);
+    resize:none;
+    width:100%;
+  }
+  .backup-file-label{display:inline-flex;align-items:center;justify-content:center;cursor:pointer;}
+  .backup-message{font-size:12.5px;color:var(--ink-soft);min-height:16px;}
+  .backup-message.error{color:var(--red-bad);}
+  .backup-message.success{color:var(--green-ok);}
 
   /* ── Summary tiles ──────────────────────────────────────── */
   .summary-grid{
@@ -516,6 +582,129 @@
     .topics-columns{display:grid;grid-template-columns:1fr 1fr;column-gap:24px;align-items:start;}
     .topics-columns .topic-list{grid-template-columns:1fr;}
   }
+
+  /* ════════════════════════════════════════════════════════════════
+     PRINT — native browser print (Cmd+P). Physics stays first, math
+     starts on its own page, every topic-card is pre-expanded by the
+     beforeprint/matchMedia JS near the end of the script (unchanged).
+     CSS-only addition: no rule above this block is touched. Charta,
+     2026-09-28. ── */
+  @page{
+    size:A4;
+    margin:14mm;
+  }
+
+  @media print{
+    /* ── Collapse every responsive multi-column trick to a single
+       stacked column, regardless of which @media (min-width:…) band
+       Chrome's print layout viewport happens to match. Forcing
+       #page-capture to display:block also cancels the 768–1023.98px
+       flex `order` reshuffle and the ≥1024px grid-template-areas
+       split — both only take effect inside a flex/grid container —
+       so physics (first in source order) prints before math without
+       needing to touch those rules directly. ── */
+    #page-capture{
+      display:block !important;
+      max-width:100% !important;
+      margin:0 !important;
+      padding:0 !important;
+    }
+    .topics-columns,
+    .topic-list{
+      display:block !important;
+    }
+    .plan-block{
+      position:static !important;
+      max-height:none !important;
+      display:block !important;
+    }
+    #plan-container{
+      max-height:none !important;
+      overflow:visible !important;
+    }
+    section[data-subject="math"]{
+      break-before:page;
+    }
+
+    /* ── Belt-and-braces for the topic cards: JS already forces every
+       <details class="topic-card"> open before print. This overrides
+       the collapsed-state hide near line 295 so .video-list still
+       shows even if a card is somehow still closed at print time. ── */
+    details.topic-card:not([open]) .video-list{
+      display:flex !important;
+    }
+    summary.topic-summary::-webkit-details-marker,
+    summary.topic-summary::marker{
+      display:none;
+      content:'';
+    }
+    summary.topic-summary{
+      list-style:none;
+      break-after:avoid;
+    }
+    .video-row{
+      break-inside:avoid;
+    }
+
+    /* ── Hide screen-only chrome — none of it means anything on paper.
+       The active twin's name is kept as a plain text label (below) so
+       "which twin" survives without the switcher buttons. #save-toast
+       and .backup-row (export/import controls + the fixed-position tick
+       toast) are Mack's 2026-10-04 additions, folded into this existing
+       hide list rather than a parallel rule — same screen-only reasoning
+       as the toolbar/rename-row lines above. ── */
+    #toolbar,
+    #export-status,
+    #save-toast,
+    .rename-row,
+    .backup-row,
+    .video-link,
+    .topic-toggle-hint{
+      display:none !important;
+    }
+    .twin-switch .twin-chip:not(.active){
+      display:none !important;
+    }
+    .twin-switch{
+      justify-content:flex-start !important;
+      margin-bottom:6px !important;
+    }
+    .twin-switch .twin-chip.active{
+      background:none !important;
+      border:none !important;
+      color:var(--ink) !important;
+      padding:0 !important;
+      min-height:auto !important;
+      min-width:auto !important;
+      font-size:16px !important;
+      cursor:default !important;
+    }
+
+    /* ── Print-friendly surface: white background, dark text, no heavy
+       shadows. print-color-adjust:exact is scoped to the handful of
+       elements where colour carries the meaning (required/extra/
+       sample chips, today's plan-row badge, progress fills) —
+       everything else prints plain so it survives "Background
+       graphics" being off. ── */
+    html,body,#page-capture,.hero,.tile,.topic-card,#plan-container,.day-row{
+      background:#fff !important;
+    }
+    .tile,.topic-card,#plan-container{
+      box-shadow:none !important;
+    }
+    .budget-track,.topic-progress .track{
+      background:#fff !important;
+      border:1px solid var(--border-soft);
+    }
+    .chip,
+    .topic-progress .fill,
+    .budget-fill,
+    #plan-container .week-block:first-child .day-row:first-of-type,
+    #plan-container .week-block:first-child .day-row:first-of-type::before{
+      -webkit-print-color-adjust:exact;
+      print-color-adjust:exact;
+    }
+  }
 </style>
 </head>
 <body>
@@ -525,6 +714,7 @@
   <button id="export-btn" type="button">Export JPEG</button>
 </div>
 <div id="export-status" role="status" aria-live="polite"></div>
+<div id="save-toast" role="status" aria-live="polite"></div>
 
 <div id="page-capture">
   <header class="hero">
@@ -554,6 +744,35 @@
         <label>ชื่อคนที่ 1 (เดิม: พี่)<input id="name-input-a" maxlength="20"></label>
         <label>ชื่อคนที่ 2 (เดิม: น้อง)<input id="name-input-b" maxlength="20"></label>
         <button id="rename-save" type="button">บันทึกชื่อ</button>
+      </div>
+    </div>
+    <div class="backup-row">
+      <button class="ghost-btn" id="backup-toggle" type="button">🔒 สำรอง/กู้คืนความคืบหน้า</button>
+      <div class="backup-panel hidden" id="backup-panel">
+        <div class="backup-section">
+          <div class="backup-section-title">ส่งออกความคืบหน้า</div>
+          <div class="backup-actions">
+            <button class="ghost-btn" id="backup-copy-btn" type="button">คัดลอกรหัส</button>
+            <button class="ghost-btn" id="backup-file-btn" type="button">บันทึกเป็นไฟล์</button>
+          </div>
+          <label class="backup-code-label hidden" id="backup-code-wrap">
+            รหัสสำรอง (แตะแล้วคัดลอกเองได้ถ้าจำเป็น)
+            <textarea id="backup-code-output" readonly rows="3"></textarea>
+          </label>
+        </div>
+        <div class="backup-section">
+          <div class="backup-section-title">นำเข้าความคืบหน้า</div>
+          <label>วางรหัสสำรองที่ได้รับที่นี่
+            <textarea id="backup-code-input" rows="3" placeholder="วางรหัสที่ได้รับจากคุณพ่อ/คุณแม่"></textarea>
+          </label>
+          <div class="backup-actions">
+            <button class="ghost-btn" id="backup-import-code-btn" type="button">กู้คืนจากรหัส</button>
+            <label class="ghost-btn backup-file-label" for="backup-file-input">เลือกไฟล์สำรอง
+              <input type="file" id="backup-file-input" accept="application/json,.json" style="display:none;">
+            </label>
+          </div>
+          <div id="backup-message" class="backup-message" role="status" aria-live="polite"></div>
+        </div>
       </div>
     </div>
   </header>
@@ -890,6 +1109,11 @@ var VIDEOS = [
   var TOPICS = P.TOPICS;
   var ENTRY_DATE_STR = P.ENTRY_DATE;
   var STORAGE_NS = 'twinPrep.v1.';
+  // Progress-backup payload shape version (export/import feature, Mack
+  // 2026-10-04). Bump only if the backup JSON shape below changes — the
+  // storage keys above are untouched by this; backups are a read/write
+  // layer on top of the same STORAGE_NS keys, not a new storage model.
+  var BACKUP_VERSION = 1;
 
   // Midnight auto-refresh state: lastRenderedDate is the todayStr render()
   // computed on its most recent pass; midnightTimer is the pending
@@ -919,16 +1143,124 @@ var VIDEOS = [
       return v === null ? fallback : JSON.parse(v);
     } catch (e) { return fallback; }
   }
+  // Returns true only if the write actually landed — reads the key back
+  // and compares rather than trusting setItem not to throw. Some in-app
+  // webviews (and private-browsing/quota-exceeded cases) accept the call
+  // silently without persisting it, which is exactly the failure mode the
+  // "Saved" indicator needs to catch truthfully (Mack, 2026-10-04).
   function safeSet(key, value){
-    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* no-op: storage unavailable */ }
+    try {
+      var serialized = JSON.stringify(value);
+      localStorage.setItem(key, serialized);
+      return localStorage.getItem(key) === serialized;
+    } catch (e) { return false; }
   }
 
   function getSelectedTwin(){ return safeGet(STORAGE_NS + 'selected', 'a'); }
-  function setSelectedTwin(id){ safeSet(STORAGE_NS + 'selected', id); }
+  function setSelectedTwin(id){ return safeSet(STORAGE_NS + 'selected', id); }
   function getNames(){ return safeGet(STORAGE_NS + 'names', { a: 'พี่', b: 'น้อง' }); }
-  function setNames(obj){ safeSet(STORAGE_NS + 'names', obj); }
+  function setNames(obj){ return safeSet(STORAGE_NS + 'names', obj); }
   function getWatched(twinId){ return safeGet(STORAGE_NS + 'watched.' + twinId, []); }
-  function setWatched(twinId, arr){ safeSet(STORAGE_NS + 'watched.' + twinId, arr); }
+  function setWatched(twinId, arr){ return safeSet(STORAGE_NS + 'watched.' + twinId, arr); }
+
+  /* ---- save feedback toast (tick/untick confirmation, Mack 2026-10-04) ----
+     Fired after every checkbox change so a kid knows the tap "stuck."
+     Success fades fast (~1.5s, per spec); a storage failure stays up
+     longer and names the actual fix (open in Safari, not the in-app LINE
+     browser) since that is the one case where silence costs real
+     progress. #save-toast markup/CSS live near #export-status. */
+  function showSaveToast(message, isWarning){
+    var toast = el('save-toast');
+    if (!toast) return;
+    clearTimeout(showSaveToast._t);
+    toast.textContent = message;
+    toast.classList.toggle('warn', !!isWarning);
+    toast.classList.add('visible');
+    showSaveToast._t = setTimeout(function(){
+      toast.classList.remove('visible');
+    }, isWarning ? 4000 : 1500);
+  }
+
+  /* ---- progress backup (export/import, Mack 2026-10-04) ----
+     localStorage is per-browser, per-device — there is no server-side
+     account here (the twins open a public published link signed out), so
+     the only way progress survives a new device, a different browser, or
+     a cleared cache is a backup the user carries themselves: a short
+     pasteable code (base64 of the JSON below) or a downloaded .json file.
+     Merge-never-deletes on import: watched ids are UNIONED with whatever
+     is already on this device; names/selected are taken from the import
+     wholesale since those are single-value fields, not accumulating
+     sets. */
+  function b64EncodeUtf8(str){
+    return btoa(unescape(encodeURIComponent(str)));
+  }
+  function b64DecodeUtf8(str){
+    return decodeURIComponent(escape(atob(str)));
+  }
+
+  function buildBackupPayload(){
+    return {
+      v: BACKUP_VERSION,
+      date: _i.ymd(new Date()),
+      selected: getSelectedTwin(),
+      names: getNames(),
+      watched: { a: getWatched('a'), b: getWatched('b') }
+    };
+  }
+
+  function onlyTwinKeys(obj){
+    var keys = Object.keys(obj);
+    for (var i = 0; i < keys.length; i++){
+      if (keys[i] !== 'a' && keys[i] !== 'b') return false;
+    }
+    return true;
+  }
+
+  // Strict shape check — any mismatch rejects the whole payload and
+  // leaves storage untouched, rather than guessing or partially applying.
+  // Video ids must be strings; twin keys must be exactly a/b.
+  function isValidBackupPayload(obj){
+    try {
+      if (!obj || typeof obj !== 'object') return false;
+      if (obj.v !== BACKUP_VERSION) return false;
+      if (typeof obj.date !== 'string') return false;
+      if (obj.selected !== 'a' && obj.selected !== 'b') return false;
+      if (!obj.names || typeof obj.names !== 'object' || !onlyTwinKeys(obj.names)) return false;
+      if (typeof obj.names.a !== 'string' || typeof obj.names.b !== 'string') return false;
+      if (!obj.watched || typeof obj.watched !== 'object' || !onlyTwinKeys(obj.watched)) return false;
+      if (!Array.isArray(obj.watched.a) || !Array.isArray(obj.watched.b)) return false;
+      var allIds = obj.watched.a.concat(obj.watched.b);
+      for (var i = 0; i < allIds.length; i++){
+        if (typeof allIds[i] !== 'string') return false;
+      }
+      return true;
+    } catch (e) { return false; }
+  }
+
+  // Returns true only if every underlying storage write succeeded — the
+  // "success" toast an import shows must be as truthful as the tick
+  // toast (showSaveToast) already is, including the in-app-LINE-webview
+  // write-failure case (Twilight code-read, 2026-10-04).
+  function applyBackupPayload(obj){
+    var allSaved = true;
+    ['a','b'].forEach(function(twinId){
+      var incoming = obj.watched[twinId] || [];
+      var existing = getWatched(twinId);
+      var merged = Array.from(new Set(existing.concat(incoming)));
+      if (!setWatched(twinId, merged)) allSaved = false;
+    });
+    if (!setNames({ a: obj.names.a, b: obj.names.b })) allSaved = false;
+    if (!setSelectedTwin(obj.selected)) allSaved = false;
+    return allSaved;
+  }
+
+  function showBackupMessage(text, isError){
+    var msg = el('backup-message');
+    if (!msg) return;
+    msg.textContent = text;
+    msg.classList.toggle('error', !!isError);
+    msg.classList.toggle('success', !isError);
+  }
 
   /* ---- Thai date formatting ---- */
   var WD_ABBR = ['อา','จ','อ','พ','พฤ','ศ','ส'];
@@ -1025,6 +1357,18 @@ var VIDEOS = [
   function renderTopics(subject, containerId, countable, watchedSet){
     var subjectTopics = TOPICS.filter(function(t){ return t.subject === subject; });
     var html = '';
+    var container = el(containerId);
+    // Preserve each card's open/closed state across the innerHTML rebuild
+    // below. render() runs on EVERY checkbox tick (plus twin switch,
+    // rename, midnight refresh), and a bare `<details class="topic-card">`
+    // with no `open` attribute always renders closed — so without this,
+    // ticking a video inside an open card silently collapsed it back to
+    // default. Keyed by topic name (stable across renders, unlike DOM
+    // node identity) via the data-topic attribute set below.
+    var openState = {};
+    container.querySelectorAll('details.topic-card[data-topic]').forEach(function(node){
+      openState[node.dataset.topic] = node.open;
+    });
     subjectTopics.forEach(function(topic){
       var topicVideosAll = P.VIDEOS.filter(function(v){ return v.topic === topic.name; });
       var topicCountable = topicVideosAll.filter(function(v){ return !v.sample; });
@@ -1039,7 +1383,11 @@ var VIDEOS = [
       // to see WITHOUT expanding (name, required/extra chip, note, progress
       // bar, video count) lives inside <summary>; only the individual video
       // rows are hidden until tapped. Keeps 97 rows scannable on iPad.
-      html += '<details class="topic-card">'
+      // data-topic is the stable key openState (above) uses to restore
+      // this card's open/closed state across the rebuild; `open` is only
+      // emitted when the prior render had this same topic open.
+      var wasOpen = openState.hasOwnProperty(topic.name) ? openState[topic.name] : false;
+      html += '<details class="topic-card" data-topic="' + escapeHtml(topic.name) + '"' + (wasOpen ? ' open' : '') + '>'
         + '<summary class="topic-summary">'
         + '<div class="topic-head">'
         + '<span class="topic-name">' + escapeHtml(topic.name) + '</span>'
@@ -1084,7 +1432,7 @@ var VIDEOS = [
       });
       html += '</div></details>';
     });
-    el(containerId).innerHTML = html;
+    container.innerHTML = html;
   }
 
   /* ---- render: suggested day-by-day plan ---- */
@@ -1195,8 +1543,13 @@ var VIDEOS = [
       var twin = getSelectedTwin();
       var set = new Set(getWatched(twin));
       if (t.checked) set.add(t.dataset.videoId); else set.delete(t.dataset.videoId);
-      setWatched(twin, Array.from(set));
+      var saved = setWatched(twin, Array.from(set));
       render();
+      if (saved) {
+        showSaveToast('บันทึกแล้ว ✓');
+      } else {
+        showSaveToast('บันทึกไม่ได้ในเบราว์เซอร์นี้ — ลองเปิดด้วย Safari (ไม่ใช่ในแอป LINE)', true);
+      }
     }
   });
 
@@ -1219,6 +1572,112 @@ var VIDEOS = [
     render();
   });
 
+  /* ---- progress backup wiring (export/import, Mack 2026-10-04) ----
+     Helpers (buildBackupPayload, isValidBackupPayload, applyBackupPayload,
+     b64 encode/decode, showBackupMessage) live with the storage block
+     above. The "save as file" button additionally needs saveFile() /
+     downloadsPromise defined just below in the export section — safe to
+     reference here since this only runs on click, after the whole script
+     (including those var/function statements) has executed once. */
+  el('backup-toggle').addEventListener('click', function(){
+    el('backup-panel').classList.toggle('hidden');
+  });
+
+  el('backup-copy-btn').addEventListener('click', function(){
+    var code = b64EncodeUtf8(JSON.stringify(buildBackupPayload()));
+    var output = el('backup-code-output');
+    output.value = code;
+    el('backup-code-wrap').classList.remove('hidden');
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(code).then(function(){
+        showBackupMessage('คัดลอกรหัสแล้ว ส่งให้คุณพ่อคุณแม่ทาง LINE ได้เลย', false);
+      }).catch(function(){
+        output.focus(); output.select();
+        showBackupMessage('คัดลอกอัตโนมัติไม่ได้ — กดเลือกรหัสด้านบนแล้วคัดลอกเอง', true);
+      });
+    } else {
+      output.focus(); output.select();
+      showBackupMessage('กดเลือกรหัสด้านบนแล้วคัดลอกเอง', true);
+    }
+  });
+
+  el('backup-file-btn').addEventListener('click', function(){
+    var payload = buildBackupPayload();
+    var json = JSON.stringify(payload, null, 2);
+    var blob = new Blob([json], { type: 'application/json' });
+    var filename = 'twin-prep-backup-' + payload.date + '.json';
+    function fallbackDownload(){
+      var a = document.createElement('a');
+      var url = URL.createObjectURL(blob);
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    }
+    saveFile(filename, blob, fallbackDownload, 'บันทึกไฟล์ไม่ได้ ลองคัดลอกรหัสแทน');
+    showBackupMessage('บันทึกไฟล์สำรองแล้ว (เช็กโฟลเดอร์ดาวน์โหลด)', false);
+  });
+
+  el('backup-import-code-btn').addEventListener('click', function(){
+    var raw = el('backup-code-input').value.trim();
+    if (!raw) { showBackupMessage('กรุณาวางรหัสก่อนกดกู้คืน', true); return; }
+    var payload;
+    try {
+      payload = JSON.parse(b64DecodeUtf8(raw));
+    } catch (e) {
+      showBackupMessage('รหัสไม่ถูกต้อง ลองคัดลอกรหัสใหม่อีกครั้ง', true);
+      return;
+    }
+    if (!isValidBackupPayload(payload)) {
+      showBackupMessage('รหัสไม่ถูกต้อง ลองคัดลอกรหัสใหม่อีกครั้ง', true);
+      return;
+    }
+    var saved = applyBackupPayload(payload);
+    render();
+    if (saved) {
+      el('backup-code-input').value = ''; // only clear on a confirmed-saved import
+      showBackupMessage('กู้คืนข้อมูลสำเร็จ ✓', false);
+    } else {
+      showBackupMessage('บันทึกไม่ได้ในเบราว์เซอร์นี้ — ลองเปิดด้วย Safari (ไม่ใช่ในแอป LINE)', true);
+    }
+  });
+
+  el('backup-file-input').addEventListener('change', function(e){
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      var payload;
+      try {
+        payload = JSON.parse(String(reader.result));
+      } catch (err) {
+        showBackupMessage('ไฟล์ไม่ถูกต้อง ลองเลือกไฟล์สำรองอีกครั้ง', true);
+        e.target.value = '';
+        return;
+      }
+      if (!isValidBackupPayload(payload)) {
+        showBackupMessage('ไฟล์ไม่ถูกต้อง ลองเลือกไฟล์สำรองอีกครั้ง', true);
+        e.target.value = '';
+        return;
+      }
+      var saved = applyBackupPayload(payload);
+      render();
+      if (saved) {
+        showBackupMessage('กู้คืนข้อมูลสำเร็จ ✓', false);
+      } else {
+        showBackupMessage('บันทึกไม่ได้ในเบราว์เซอร์นี้ — ลองเปิดด้วย Safari (ไม่ใช่ในแอป LINE)', true);
+      }
+      e.target.value = '';
+    };
+    reader.onerror = function(){
+      showBackupMessage('อ่านไฟล์ไม่สำเร็จ ลองใหม่อีกครั้ง', true);
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
   /* ---- export (rule 10: PDF + JPEG only, font-race + letter-spacing guard) ---- */
   function hideBtns(){ el('toolbar').style.display = 'none'; }
   function showBtns(){ el('toolbar').style.display = ''; }
@@ -1233,6 +1692,20 @@ var VIDEOS = [
   var downloadsPromise = (window.claude && typeof window.claude.use === 'function')
     ? window.claude.use('downloads').catch(function(){ return null; })
     : Promise.resolve(null);
+
+  // Backup "save as file" button: hidden only when inside the claude.ai
+  // Artifact viewer (window.claude present) AND the downloads capability
+  // resolved unavailable. In that specific case saveFile()'s blob
+  // <a download> fallback is also a no-op (see the comment on saveFile
+  // below), so a visible button would be a dead tap. On the live
+  // published link (no window.claude at all) the blob fallback works
+  // normally in a real browser, so the button always stays.
+  downloadsPromise.then(function(downloads){
+    if (window.claude && typeof window.claude.use === 'function' && !downloads) {
+      var fileBtn = el('backup-file-btn');
+      if (fileBtn) fileBtn.style.display = 'none';
+    }
+  });
 
   function showStatus(message){
     var status = el('export-status');
@@ -1387,6 +1860,49 @@ var VIDEOS = [
 
   el('pdf-btn').addEventListener('click', exportPDF);
   el('export-btn').addEventListener('click', exportJPEG);
+
+  /* ---- native print support (Cmd+P) ----
+     pdf-btn/export-btn above are a separate html2canvas/jsPDF rasterizer
+     that already snapshots the screen's current open/closed state by
+     design (see the details:not([open]) CSS comment) — they are not
+     window.print() and are left untouched per the no-new-buttons rule.
+     This block only handles the browser's own print (Cmd+P / File>Print),
+     which needs every topic-card expanded so every video row is in the
+     printed output, then restored to whatever the parent had open.
+     beforeprint/afterprint cover Chrome/Safari/modern Firefox; the
+     matchMedia('print') listener is the fallback for engines that only
+     signal via a media-query change (older Firefox/Safari). Both paths
+     funnel through the same idempotent expand/restore pair, guarded by
+     printOpenState, so a browser that fires both never double-applies
+     or clobbers the saved state with an already-all-open snapshot. */
+  var printOpenState = null;
+
+  function expandAllForPrint(){
+    if (printOpenState) return; // already expanded for this print pass
+    printOpenState = [];
+    document.querySelectorAll('details.topic-card').forEach(function(node){
+      printOpenState.push([node, node.open]);
+      node.open = true;
+    });
+  }
+
+  function restoreAfterPrint(){
+    if (!printOpenState) return;
+    printOpenState.forEach(function(pair){ pair[0].open = pair[1]; });
+    printOpenState = null;
+  }
+
+  window.addEventListener('beforeprint', expandAllForPrint);
+  window.addEventListener('afterprint', restoreAfterPrint);
+
+  if (window.matchMedia) {
+    var printMql = window.matchMedia('print');
+    var handlePrintMqlChange = function(e){
+      if (e.matches) expandAllForPrint(); else restoreAfterPrint();
+    };
+    if (printMql.addEventListener) printMql.addEventListener('change', handlePrintMqlChange);
+    else if (printMql.addListener) printMql.addListener(handlePrintMqlChange); // Safari <14
+  }
 
   render();
 })();
