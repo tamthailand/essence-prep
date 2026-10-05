@@ -507,6 +507,23 @@
     .countdown{margin-bottom:0;}
     .twin-switch{margin-bottom:0;justify-content:flex-start;}
     .rename-row{flex-direction:row;align-items:center;}
+    /* Charta 2026-10-05: backup-row had no ≥1024px override, so it
+       stayed flex-direction:column — the panel dropped BELOW its
+       toggle inside a hero flex item that justify-content:space-between
+       pushes to the far right, leaving a large dead gap between
+       .rename-row and the tall backup-panel. Mirror the proven
+       .rename-row pattern so toggle + panel sit side by side instead. */
+    .backup-row{flex-direction:row;align-items:center;}
+
+    /* Charta 2026-10-05: ≥1024px is the two-column layout (topics left,
+       sticky read-only day-plan right — see grid-template-areas below).
+       Every checkbox a kid taps lives in .topics-columns; .plan-block
+       has none. The page-centered toast (left:50%) straddles the column
+       boundary and was landing on top of the sticky plan card instead
+       of anywhere near what was just tapped. Left-anchor it near the
+       topics column instead of page-center. */
+    #save-toast{left:28px;transform:translate(0, 8px);}
+    #save-toast.visible{transform:translate(0, 0);}
 
     .tile-value{font-size:28px;}
     .tile-value.small{font-size:16px;}
